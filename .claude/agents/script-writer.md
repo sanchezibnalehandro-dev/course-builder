@@ -32,9 +32,14 @@ slide + beats → **강사가 실제로 발화할 스크립트** (`transcript.tx
 - 각 슬라이드 앞에 `[slide N]` cue (TTS 후처리 시 오디오 구간 분할용)
 - 문장 간 호흡은 `[pause:ms]` (보통 300~600ms, 강조 전에는 800ms)
 
-### 길이 계산
-- 슬라이드 1장당 60~90초 발화 (한국어 기준 180~270 단어/슬라이드)
-- class 전체 target_duration_sec에 ±10% 이내로 맞춤
+### Длительность
+- Для `ru` единственный расчёт: `spoken_words / 130 × 60 + explicit_pause_sec`.
+- Сопоставьте каждый `[slide N]` с `<!-- beat: bN -->` в `slide.source.md`; если один beat занимает несколько слайдов, считайте их вместе.
+- Для каждого beat ведите duration ledger: `beat_id`, `type`, `target_sec`, `spoken_words`, `spoken_sec`, `pause_sec`, `estimated_sec`, `status`.
+- Сначала напишите достаточно полную для LO речь и конкретный пример без повторов ради секунд; затем измерьте каждый beat и class. `duration_sec` / `target_duration_sec` — предварительный бюджет, не квота контента.
+- Если обязательный смысл или шаг примера отсутствует, дополните именно его. Если содержание полно, а оценка короче плана, передайте ledger class planner для уточнения существующих duration-полей; не дописывайте filler.
+- В любом beat каждая естественная пауза ≤1,2 с, а суммарные паузы ≤15% его оценочной playback duration. Паузы не материализуют учебное содержание.
+- `practice` строится как полная выполнимая инструкция с ожидаемым результатом → явная команда поставить урок на паузу и затем возобновить → произносимая самопроверка, продолжение или переход. Время самостоятельной работы не входит в playback duration и не кодируется длинным `[pause:N]`.
 
 ### SSML 변형
 - 사용자가 명시 요청 시 `transcript.ssml` 추가 생성 (언어 무관 옵션)
@@ -43,7 +48,7 @@ slide + beats → **강사가 실제로 발화할 스크립트** (`transcript.tx
 
 ## 출력 언어 (Output Language)
 `course_spec.language`(기본 `ko`) 전체 발화 텍스트를 해당 언어로.
-- 길이 계산: `ko` → 슬라이드 1장당 180~270 어절, `en`과 `ru` → 슬라이드 1장당 130~200 words.
+- Длительность для `ru` рассчитывается только по правилу раздела «Длительность»; нормы слов на слайд не применяются.
 - Speakable 규칙:
   - `ko` → 어절 ≤20, 축약("거라고", "뭐냐면") 허용.
   - `en` → 문장 ≤25 words, 축약("it's", "don't") 허용.
@@ -54,7 +59,6 @@ slide + beats → **강사가 실제로 발화할 스크립트** (`transcript.tx
 - `_workspace/03_class_<class_id>_beats.json`
 - `course/.../slide.source.md` (슬라이드 순서·타이틀 동기화용)
 - `course/.../note.md` (맥락 참고용, 복사 금지)
-- (선택) `course_prev_*/manifest.json` — 이전 run의 duration 실측값. 동일 `class_id` 가 있으면 `actual_audio_duration_sec` 를 읽어 **prior-run calibration** 수행 (SKILL.md 참조). 없으면 `rate_cps` 정적 테이블 fallback.
 
 ## 출력
 - `course/sections/<sec-slug>/classes/<class-slug>/transcript.txt`
@@ -62,7 +66,7 @@ slide + beats → **강사가 실제로 발화할 스크립트** (`transcript.tx
 
 ## 팀 통신 프로토콜
 - **수신**: 오케스트레이터로부터 `Write script for <class_id>` (slide + note 완료 후)
-- **발신**: 완료 시 `Script <class_id>: <N> words, <duration_sec>s estimated`
+- **발신**: 완료 시 `Script <class_id>: <N> spoken words, <P>s explicit pauses, <duration_sec>s estimated`; для `ru` приложить per-beat duration ledger, описать instruction → learner-controlled playback pause → continuation каждого practice и явно передать содержательно полный, но более короткий class планировщику на пересчёт.
 - **의존**: slide-author 완료 대기 (슬라이드 번호가 필요)
 
 ## 에러 핸들링

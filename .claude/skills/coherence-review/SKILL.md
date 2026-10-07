@@ -53,11 +53,33 @@ course/sections/<sec>/quiz.json
 - quiz 정답이 note/slide 내용과 모순되는지
 - distractor가 실제로 오답인지 (가끔 AI가 정답을 distractor에 넣음)
 
-### 8. Transcript Speakability
+### 8. Transcript Speakability и длительность
 - raw code literal: `` ` ``(backtick) 포함 여부
 - 긴 숫자: `\d{4,}` 정규식 **— 단, 대괄호 디렉티브 `[pause:N]`, `[slide N]`, `[emph]...[/emph]` 내부 숫자는 제외 (TTS 후처리용 마커이지 발화 대상 아님)**. 구현: 먼저 `\[(pause|slide|emph|/emph)[^\]]*\]` 패턴을 공백으로 치환한 뒤 숫자 검사.
 - 생 URL: `https?://` 검출
 - 문장 길이: 20 어절 초과 문장 비율
+
+Для `language == "ru"` до verdict обязательно сопоставить transcript со beat sheet:
+
+- Извлечь `<!-- beat: bN -->` каждого слайда; отсутствие/неизвестный id — FAIL, без угадывания.
+- Привязать `[slide N]` block к beat id и агрегировать все blocks одного beat.
+- Для каждого beat рассчитать:
+
+```
+beat_spoken_sec = beat_spoken_words / 130 × 60
+beat_estimated_sec = beat_spoken_sec + beat_pause_sec
+```
+
+- Не считать words внутри `[slide N]`, `[pause:N]` и служебных маркеров.
+- Для каждого beat проверьте содержательно, что transcript раскрывает его `key_points` и относящиеся к нему LO. В `example` требуйте конкретный разбор из существующих `examples`/slide/note: исходные данные или запрос, действие, наблюдаемый результат и вывод. Отсутствующее содержание — `script_content_gap`, route_to `script-writer`; расхождение с предварительным временем само по себе не является пробелом содержания.
+- Разницу между `beat_estimated_sec` и плановым `beat.duration_sec` покажите в ledger без автоматического FAIL автору. Для любого beat отдельная пауза >1,2 с или сумма пауз >15% оценочной playback duration beat — `pause_padding` FAIL.
+- Для `practice` проверить порядок в пределах beat: конкретное действие и ожидаемый результат → явная команда поставить урок на паузу, выполнить действие и возобновить воспроизведение → произносимая самопроверка/продолжение/переход. Отсутствие любого элемента — `practice_sequence_invalid`.
+- Самостоятельное время ученика не включать в `beat_pause_sec` и duration. Маркер `[pause:N]`, изображающий это время, всегда проверяется как обычная аудиопауза и при превышении лимита получает `pause_padding`.
+- Повтор или фрагмент, добавленный только ради длительности и не вводящий новый `key_point`, шаг демонстрации, действие или критерий проверки, — `duration_padding`, route_to `script-writer`.
+- Если полноценный урок короче рекомендованных 5 минут, зафиксируйте warning и проверьте границу class, но не ставьте `REVISE` только из-за нижней границы. Если урок длиннее 12 минут, направьте его section designer на разделение или сужение.
+- После содержательной проверки, если полноценный урок отличается от плановой длительности, `REVISE` направляется `class-planner` для уточнения существующих `beats[].duration_sec` и `target_duration_sec`, затем `section-designer` уточняет `classes[].duration_min`. Изменение утверждённого course total проходит существующий HITL checkpoint; до согласования не выдавайте `PASS`. Не направляйте script-writer дописывать текст только ради минут.
+- Перед `PASS` проверьте, что сумма уточнённых beat durations соответствует `target_duration_sec`, class estimate попадает в уточнённый `target_duration_sec ±10%`, `classes[].duration_min` честно округляет оценку class, а section/course totals согласованы после HITL. Старая целевая длительность и компенсирующая её длинная pause не проходят gate.
+- В JSON и MD report записать class total и per-beat ledger: `beat_id`, `type`, `target_sec`, `spoken_words`, `spoken_sec`, `pause_sec`, `estimated_sec`, `status`; для practice также sequence verdict.
 
 ## 판정 로직
 
@@ -144,6 +166,11 @@ revise 판정 시 각 이슈를 담당 에이전트에 직접 전달:
 | tone_drift | 해당 저자 |
 | quiz_factual_error | quiz-master |
 | speakability_violation | script-writer |
+| script_content_gap | script-writer |
+| transcript_duration (полный урок, устаревший class target) | class-planner → section-designer |
+| pause_padding | script-writer |
+| practice_sequence_invalid | script-writer |
+| duration_padding | script-writer |
 | bloom_gap (section) | quiz-master |
 | bloom_gap (course) | curriculum-architect |
 
@@ -163,6 +190,10 @@ REVISE <artifact_id> <issue_type> | detail: ... | fix_hint: ...
 - [ ] tone 일관성 (sampling 기반)
 - [ ] quiz 사실성 (slide/note와 대조)
 - [ ] speakability grep 규칙 통과
+- [ ] Для `ru` transcript содержательно раскрывает каждый beat/LO и конкретный пример; расхождение с предварительным бюджетом направлено планировщику, а не сценаристу
+- [ ] Перед PASS beat/class/section/course duration согласованы после требуемого HITL, class estimate находится в уточнённом target ±10%
+- [ ] Во всех beat-ах pauses соблюдают ≤1,2 с каждая и ≤15% оценочного playback времени beat
+- [ ] Каждый practice соблюдает instruction → learner-controlled playback pause → continuation; самостоятельное время исключено из duration
 - [ ] 리포트 json + md **atomic dual-write** (동일 소스 데이터, 동일 verdict)
 - [ ] **Verdict sync 검증**: JSON `overall` ↔ MD `## VERDICT:` 일치
 - [ ] revise 시 수정 라우팅 메시지 발송

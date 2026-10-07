@@ -91,65 +91,48 @@ pause 권장값:
 - ❌ "Use 👉 this"
 - ✅ "이것을 사용하세요"
 
-## 길이 계산
+## Расчёт длительности
 
-문자/분 속도는 **voice와 TTS 엔진, speed 설정에 따라 달라진다**. 아래 실측 표 기반:
+### Русский transcript: единственный duration contract
 
-### Voice별 발화 속도 (char/sec, speed=1.0 기준)
-
-| 엔진 | Voice | ko 실측 | en 실측 | ru 초기값 |
-|------|-------|---------|---------|-----------|
-| OpenAI `gpt-4o-mini-tts` | `nova` | ≈4.3 | ≈3.8 (est.) | ≈4.0 (미보정) |
-| OpenAI `tts-1` / `tts-1-hd` | 기본값 | ≈4.2 | ≈3.7 (est.) | ≈3.5 (미보정) |
-| edge-tts | `ko-KR-SunHiNeural` | ≈4.3 | — | — |
-| edge-tts | `en-US-*Neural` | — | ≈3.5 | — |
-| edge-tts | `ru-RU-SvetlanaNeural` | — | — | ≈3.5 (미보정) |
-
-> 2026-04-22 ko/en 실측 — 13~14 슬라이드 단위 표본 기반. ru 값은 초기 추정치이며 실제 합성 후 prior-run calibration으로 교체.
-
-### Script 길이 공식 (Bloom/affect에 관계없이 duration 목표 역산)
+Для обычной русской учебной речи используется темп **130 произносимых слов в минуту**. TTS engine, voice, speed, chars/sec и prior-run calibration не участвуют в этой оценке.
 
 ```
-# 변수: rate_cps = 위 표의 char/sec, speed = TTS speed 파라미터 (기본 1.0)
-script_length_chars ≈ target_duration_sec × rate_cps × speed
-
-# 예: ko nova speed=1.3, 10분 class 목표
-= 600 × 4.3 × 1.3 ≈ 3354자
+spoken_sec = spoken_words / 130 × 60
+estimated_duration_sec = spoken_sec + explicit_pause_sec
 ```
 
-pause 구간은 ±5~15% 추가로 차지하니 텍스트 목표는 97%~85%로 보수적으로.
+`spoken_words` считает только произносимые слова; `[slide N]`, `[pause:N]` и служебные теги не считаются. `explicit_pause_sec` — точная сумма всех pause markers.
 
-### 이전 공식과의 차이
-v1의 단일 공식(2.7 chars/sec)은 **Neural voice의 실제 속도(≈4.3)를 크게 과소평가** — 스크립트가 target보다 60% 길어지는 경향 있었음. 하네스 초기 실행에서 estimate 1,127s vs 실측 713s의 36% 갭으로 확인.
+Сначала напишите речь, необходимую для LO, `key_points` и конкретного примера, затем добавьте только естественные паузы. Измерьте получившийся урок по формуле выше. Число слов — результат содержания, а не обратный расчёт из планового времени. Самостоятельное действие ученика в practice не входит в playback duration.
 
-### Prior-run calibration (자동 보정, 권장)
+Не применяйте норму слов или секунд «на слайд». По `<!-- beat: bN -->` сопоставьте каждый transcript slide block с beat sheet; несколько слайдов одного beat агрегируются.
 
-같은 주제·언어로 재실행할 때는 정적 `rate_cps` 테이블 대신 **이전 run의 실측값**을 사용해 per-class로 보정한다.
-
-입력: `course_prev_*/manifest.json` 의 `sections[].classes[].actual_audio_duration_sec` (synth-manifest.py 가 기록) + 해당 class의 `duration_min` target.
+Для каждого beat отдельно:
 
 ```
-if prior_manifest exists and class_id matches:
-    prev_actual_sec = prev_class.actual_audio_duration_sec
-    prev_target_sec = prev_class.duration_min * 60
-    calib = prev_actual_sec / prev_target_sec    # 1.08 = 8% over, 0.92 = 8% under
-    calib = max(0.7, min(1.4, calib))            # safety clamp — 극단값 무시
-    adjusted_char_budget = (target_duration_sec × rate_cps × speed) / calib
-else:
-    adjusted_char_budget = target_duration_sec × rate_cps × speed
+beat_spoken_sec = beat_spoken_words / 130 × 60
+beat_estimated_sec = beat_spoken_sec + beat_pause_sec
 ```
 
-동작 원리:
-- 이전 run이 target보다 **길었으면** (calib > 1) 다음 run은 char budget을 **줄인다**.
-- 짧았으면 늘린다.
-- clamp `[0.7, 1.4]` 는 rate_cps 테이블 자체가 크게 틀린 초기 run에서 과보정 폭주 방지용.
+`beat.duration_sec` и `target_duration_sec` — предварительные бюджеты. Расхождение фиксируйте в ledger, но не устраняйте его добавлением повторов или пауз. Если отсутствуют LO, `key_points` или требуемые шаги примера — допишите только недостающее содержание. Если они покрыты и practice выполнима, передайте фактическую оценку class planner для пересчёта существующих beat/class duration-полей; после согласования class total проверяется против уточнённого `target_duration_sec ±10%`.
 
-### 보정 실패 대응 (fallback)
-prior_manifest가 없거나 class_id 매칭 실패 시, 또는 calib 적용 후에도 실제 duration이 target ±10% 벗어나면:
-- 너무 짧음: beat의 `key_points`에 구체 예시 1개 추가
-- 너무 김: 중복 부연 제거, teach beat를 2개로 분할한 뒤 각 분량 축소
+### Паузы во всех beat-ах
 
-±10% 이내 맞춤.
+- Содержание материализуется произносимой речью, покрывающей `key_points` соответствующего beat.
+- Любая естественная `[pause:N]`, включая practice, не превышает 1200 мс.
+- Сумма всех пауз не превышает 15% оценочной playback duration beat, а не его устаревшего планового бюджета.
+- Пауза не засчитывается как самостоятельное учебное содержание и не может использоваться для заполнения недостающего текста.
+
+### Practice
+
+Practice содержит реальную произносимую инструкцию и проверку, но самостоятельное время ученика не является временем воспроизведения. Внутри того же beat обязателен порядок:
+
+1. **Instruction:** назвать действие ученика, материал или объект работы и ожидаемый результат либо критерий завершения.
+2. **Learner-controlled pause:** явно предложить поставить урок на паузу, выполнить действие и затем возобновить воспроизведение. Не кодировать это время маркером `[pause:N]` и не прибавлять его к duration.
+3. **Continuation:** после точки возобновления произнести способ самопроверки, следующий шаг или явный переход к следующему beat. Между instruction и continuation допустима только короткая естественная пауза по общим правилам.
+
+Practice без конкретного действия, ожидаемого результата, явной команды приостановить и возобновить урок или последующей самопроверки считается неполным. В отчёте script-writer укажите per-beat ledger и для practice — тексты instruction, learner-controlled pause и continuation.
 
 ## [slide N] 매핑
 
@@ -197,6 +180,8 @@ class-planner의 `speaker_affect` 필드를 문체·속도에 반영:
 - [ ] `[slide N]` cue 수 == slide.source.md 슬라이드 수
 - [ ] **각 슬라이드 내레이션이 여러 줄로 분할됨 (한 줄에 몰아쓰기 금지) — subtitle-sync 추적 가능성**
 - [ ] `[pause:NNN]` 마커는 각자 자기 줄에 단독 (인라인 금지)
-- [ ] 추정 duration이 beats 총합 ±10% 이내
+- [ ] Для `ru` каждый beat измерен; если полный урок расходится с планом, ledger передан class planner, а согласованный class total находится в уточнённом target ±10%
+- [ ] В каждом beat каждая пауза ≤1,2 с, а сумма пауз ≤15% оценочного playback времени beat
+- [ ] Каждый practice имеет порядок instruction → learner-controlled playback pause → continuation; самостоятельное время не записано как `[pause:N]`
 - [ ] tone 파라미터 일관 유지
 - [ ] SSML 생성 시 xsd 검증 통과

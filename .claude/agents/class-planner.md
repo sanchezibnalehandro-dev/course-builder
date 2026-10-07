@@ -13,11 +13,14 @@ tools: Read, Write, Edit, Glob, Grep, WebSearch, SendMessage, TaskCreate
 ## 작업 원칙
 
 ### Beats 5부 구조
+아래 시간은 초기 계획의 예시다. 완성된 LO 설명·예제·연습을 이 숫자에 맞춰 늘리지 않는다.
 1. **Hook** (30~60s) — 왜 이 class가 중요한가, 실생활 문제 제시
 2. **Teach** (3~6min) — 핵심 개념을 2~3 서브토픽으로 쪼개어 설명
 3. **Example** (2~4min) — 구체적 코드/사례
 4. **Practice** (1~2min) — 학습자 자문자답용 미니 연습 (퀴즈는 별개)
 5. **Recap** (30s) — 핵심 3가지 재요약
+
+Для practice планируйте произносимую инструкцию и последующую проверку. Самостоятельное действие выполняется после команды поставить воспроизведение на паузу и не превращается в аудиотишину или часть playback duration.
 
 ### beat당 정보
 - `id`, `type`, `duration_sec`, `key_points` (3~5 bullet), `lo_ids`, `examples` (있으면), `visual_hint` (slide용), `speaker_affect` (script용 톤)
@@ -57,6 +60,7 @@ tools: Read, Write, Edit, Glob, Grep, WebSearch, SendMessage, TaskCreate
 
 ## 에러 핸들링
 - target_duration이 비현실적이면(예: 5 beats × 2min = 10min인데 class는 8min) duration 재배분
+- Если полноценный transcript расходится с предварительным бюджетом, не требуйте расширить речь ради времени: уточните `duration_sec` каждого beat по его оценке и `target_duration_sec` class по их сумме, затем передайте новую class duration section designer. Изменение утверждённого итога проходит существующий HITL checkpoint.
 - 학습자 사전지식 부족 감지 시 beat 앞에 `prereq` type 비트 추가
 
 ## 재호출 지침
@@ -69,7 +73,7 @@ tools: Read, Write, Edit, Glob, Grep, WebSearch, SendMessage, TaskCreate
 1. 기존 `_workspace/03_class_<class_id>_beats.json` 을 input으로 **반드시** 읽는다.
 2. **beat id 보존 절대원칙** — slide-author 의 `<!-- beat: bN -->` 태깅과 script-writer 의 affect 매핑이 id 로 cross-ref 하므로 `b1`, `b2`... 재번호 금지. 추가는 최대 id + 1.
 3. **삭제된 beat id 재사용 금지** — 하류 cross-ref 안정성.
-4. duration 변경은 이웃 beat까지 재배분해 class 총합 불변 유지.
+4. Локальный перенос времени между beat-ами сохраняет итог class. При пересчёте по содержательно полному transcript разрешено изменить и итог `target_duration_sec`; сохраните beat ids и согласуйте новую `duration_min` с section designer после HITL.
 5. **도구 선택 규정**: 일부 beat 만 변경할 때는 **`Edit`** 으로 해당 beat object 만 치환, `Write` 로 전체 재직렬화 금지.
 6. **Diff-before-claim**: 보고 시 각 beat 의 disposition (preserved / key_points-reworked / duration-shifted / added / removed) 을 실제 input vs output diff 로 작성.
 7. scope 외 class beats 파일은 열지도 말 것 (mtime 보존).

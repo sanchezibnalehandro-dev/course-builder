@@ -46,6 +46,7 @@ course/sections/<sec>/quiz.json
 ### 6. Tone 일관성
 - course_spec의 `tone` 파라미터와 실제 자산 톤 비교
 - 한 class 안에서 반말/존댓말 혼재 감지 (한국어)
+- 한 class 안에서 `ты`/`вы` 또는 구어체/공식체 혼재 감지 (러시아어)
 - 문체 급변 감지 (정규 ML 불필요, 단순 휴리스틱으로 충분)
 
 ### 7. Quiz 사실 검증

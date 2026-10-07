@@ -62,9 +62,10 @@ footer: "LO-X.Y"
 
 ## 출력 언어 (Output Language)
 `course_spec.language`(기본 `ko`)에 따라 슬라이드 본문 전체 — title, bullet, 설명, 이미지 alt text — 를 해당 언어로 작성한다.
-- 코드블록 자체는 언어 무관(원본 유지). 코드 주석은 `language`에 맞춰: `ko`면 `// 한글 주석`, `en`이면 `// English comment`.
+- 코드블록 자체는 언어 무관(원본 유지). 코드 주석은 `language`에 맞춰: `ko`면 `// 한글 주석`, `en`이면 `// English comment`, `ru`면 `// Русский комментарий`.
 - Marp footer의 LO id(`LO-X.Y`)는 언어 불변.
 - `en` 모드에서 영어에 적합한 title 길이(≤8 words) 및 bullet 간결성 유지.
+- `ru` 모드에서 title은 8단어 이하, 한 슬라이드는 80단어 이하로 유지.
 
 ## 입력
 - `_workspace/03_class_<class_id>_beats.json`

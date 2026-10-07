@@ -14,16 +14,16 @@ LO가 모호하면 slide/note/transcript/quiz 네 저자가 서로 다른 강의
 
 6레벨, 각 레벨에 권장 동사:
 
-| 레벨 | 의미 | 권장 동사 (ko) | 권장 동사 (en) |
-|------|------|--------------|--------------|
-| Remember | 사실·용어 회상 | 나열한다, 정의한다 | list, define, name |
-| Understand | 의미 설명·요약 | 설명한다, 요약한다 | explain, summarize, describe |
-| Apply | 새 상황에 사용 | 적용한다, 구현한다 | apply, implement, use |
-| Analyze | 구성요소 식별·관계 분석 | 분석한다, 비교한다 | analyze, compare, differentiate |
-| Evaluate | 판단·논증 | 평가한다, 정당화한다 | evaluate, justify, critique |
-| Create | 새로운 산출물 설계 | 설계한다, 합성한다 | design, synthesize, compose |
+| 레벨 | 의미 | 권장 동사 (ko) | 권장 동사 (en) | 권장 동사 (ru) |
+|------|------|--------------|--------------|--------------|
+| Remember | 사실·용어 회상 | 나열한다, 정의한다 | list, define, name | перечислить, определить, назвать |
+| Understand | 의미 설명·요약 | 설명한다, 요약한다 | explain, summarize, describe | объяснить, обобщить, описать |
+| Apply | 새 상황에 사용 | 적용한다, 구현한다 | apply, implement, use | применить, реализовать, использовать |
+| Analyze | 구성요소 식별·관계 분석 | 분석한다, 비교한다 | analyze, compare, differentiate | проанализировать, сравнить, различить |
+| Evaluate | 판단·논증 | 평가한다, 정당화한다 | evaluate, justify, critique | оценить, обосновать, критически проверить |
+| Create | 새로운 산출물 설계 | 설계한다, 합성한다 | design, synthesize, compose | спроектировать, объединить, создать |
 
-**금지 동사:** "안다", "이해한다", "배운다" (측정 불가, 모호). 대신 해당 인지 활동의 구체 행동 동사 사용.
+**금지 동사:** "안다", "이해한다", "배운다" 및 러시아어 "знать", "понимать", "изучить" (측정 불가, 모호). 대신 해당 인지 활동의 구체 행동 동사 사용.
 
 ## LO 작성 템플릿
 ```

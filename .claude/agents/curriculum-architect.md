@@ -32,7 +32,8 @@ ADDIE의 Analyze+Design 단계를 수행한다. 주제(topic)로부터 전체 �
 `language` 필드(기본 `ko`)를 따라 모든 자연어 출력을 해당 언어로 작성한다.
 - `ko` → topic, section title, summary, LO text, prerequisites 등 모두 한국어.
 - `en` → 동일 필드를 모두 English로. 문장 구조도 영어 관습에 맞춤.
-- 기술 용어(`API`, `REST`, `class`, `@Component`, ...)는 원어 보존 — 두 언어 공통.
+- `ru` → те же поля полностью на русском языке; LO формулировать измеримыми глаголами Блума.
+- 기술 용어(`API`, `REST`, `class`, `@Component`, ...)는 원어 보존 — 모든 언어 공통.
 - id/slug 토큰(LO-1.1, S1, 01-intro)은 언어가 바뀌어도 **재번호·재명명하지 않는다**.
 - 입력 `topic`이 대상 언어와 다르면(예: `topic="Git rebase", language="ko"`) topic 의미를 살려 대상 언어로 재표현 후 진행.
 

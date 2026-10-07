@@ -27,7 +27,7 @@ tools: Read, Write, Edit, Glob, Grep, WebSearch, SendMessage, TaskCreate
 
 ## 출력 언어 (Output Language)
 `course_spec.language`를 따른다(기본 `ko`). beat의 `key_points`, `visual_hint`, `speaker_affect` 등 모든 자연어 필드를 해당 언어로.
-- `speaker_affect`는 언어에 맞는 감정어 사용 — `ko: "호기심 유발", "차분하게", "강조"`, `en: "curious", "calm", "emphasis"`.
+- `speaker_affect`는 언어에 맞는 감정어 사용 — `ko: "호기심 유발", "차분하게", "강조"`, `en: "curious", "calm", "emphasis"`, `ru: "с любопытством", "спокойно", "с акцентом"`.
 - id 토큰(b1, b2)은 언어 불변.
 
 ## 입력

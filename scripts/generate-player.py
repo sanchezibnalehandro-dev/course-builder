@@ -125,7 +125,60 @@ _PLAYER_STRINGS = {
         "landing_stats_tpl": "{n_cls} classes · {n_lo} LOs · {mins:.1f} min",
         "landing_class_stats_tpl": "{n_slides} slides · {dur:.1f} min · LO {los}",
     },
+    "ru": {
+        "menu_title": "Открыть или закрыть содержание",
+        "home": "Главная",
+        "slide_label": "Слайд",
+        "slide_unit": " слайдов",
+        "min_unit": " мин",
+        "speed_title": "Скорость воспроизведения",
+        "prev": "Назад",
+        "play": "Воспроизвести",
+        "pause": "Пауза",
+        "next": "Далее",
+        "transcript_h2": "Текст лекции",
+        "end_title": "Занятие завершено!",
+        "end_sub": "Переходите дальше или проверьте, что запомнили.",
+        "resume_prefix": "Предыдущее место",
+        "resume_yes": "Продолжить",
+        "resume_no": "Сначала",
+        "quiz_cta_footer": "Пройти тест раздела",
+        "back_to_toc": "К содержанию",
+        "cta_this_section": "Этот раздел",
+        "cta_final_quiz": "Пройти итоговый тест",
+        "cta_done": "Готово",
+        "cta_course_toc": "К содержанию курса",
+        "cta_check_section": "Проверить этот раздел",
+        "cta_section_quiz": "Пройти тест раздела",
+        "cta_next_section": "Следующий раздел",
+        "cta_next_class": "Следующее занятие",
+        "cta_check_first": "Сначала проверка",
+        "cta_section_quiz_short": "Тест раздела",
+        "cta_continue": "Продолжить обучение",
+        "toc_quiz_tpl": "Тест раздела ({n} вопросов)",
+        "quiz_title": "Тест",
+        "back_toc_short": "Содержание",
+        "items_unit": "вопросов",
+        "submit_grade": "Отправить и проверить",
+        "score_correct": "правильных ответов",
+        "short_answer_note_prefix": "(",
+        "short_answer_note_mid": " открытых вопросов проверяются самостоятельно по критериям",
+        "next_label": "Далее",
+        "true_label": "Верно",
+        "false_label": "Неверно",
+        "answer_placeholder": "Введите ответ...",
+        "rubric_heading": "Критерии оценки",
+        "distractor_heading": "Почему другие варианты неверны",
+        "correct_label": "Правильный ответ",
+        "landing_stats_tpl": "{n_cls} занятий · {n_lo} целей обучения · {mins:.1f} мин",
+        "landing_class_stats_tpl": "{n_slides} слайдов · {dur:.1f} мин · LO {los}",
+        "ai_voice_notice": "Голос озвучки сгенерирован искусственным интеллектом.",
+    },
 }
+
+# Keep the disclosure key available for legacy locales without changing their UI.
+_PLAYER_STRINGS["ko"].setdefault("ai_voice_notice", "AI로 생성된 음성입니다.")
+_PLAYER_STRINGS["en"].setdefault("ai_voice_notice", "The narration voice is AI-generated.")
 
 
 def _tx(lang: str) -> dict:
@@ -234,6 +287,7 @@ PLAYER_TMPL = """<!DOCTYPE html>
   button.speed{{min-width:58px;font-variant-numeric:tabular-nums;font-weight:500}}
   #pos{{color:#8b95a7;font-size:13px;margin-left:auto}}
   audio{{width:100%}}
+  .ai-voice-notice{{margin:-4px 2px 0;color:#8b95a7;font-size:12px}}
   aside#transcript{{background:#181c26;border-radius:12px;padding:16px;max-height:calc(100vh - 200px);overflow-y:auto}}
   aside#transcript h2{{margin:0 0 10px 0;font-size:14px;color:#8b95a7;font-weight:500;text-transform:uppercase;letter-spacing:.5px}}
   #tx-body p{{margin:0 0 8px 0;transition:background .2s,color .2s;border-radius:4px;padding:2px 6px}}
@@ -295,6 +349,7 @@ PLAYER_TMPL = """<!DOCTYPE html>
       <span id="pos">1 / {slide_count}</span>
     </div>
     <audio id="audio" preload="auto"></audio>
+    {audio_notice_html}
     <section id="end-panel">
       <h2>🎉 {tx_end_title}</h2>
       <p class="sub">{tx_end_sub}</p>
@@ -801,6 +856,10 @@ def build_class_player(cls: dict, root: Path, back_href: str, quiz_href: str,
     )
     course_progress_pct = round(class_number / total_classes * 100, 1)
     t = _tx(lang)
+    audio_notice_html = (
+        f'<p class="ai-voice-notice">{html.escape(t["ai_voice_notice"])}</p>'
+        if any(slide["mp3"] for slide in slides) else ""
+    )
     tx_kwargs = {f"tx_{k}": v for k, v in t.items()}
     html_out = PLAYER_TMPL.format(
         title=html.escape(cls["title"]),
@@ -815,6 +874,7 @@ def build_class_player(cls: dict, root: Path, back_href: str, quiz_href: str,
         total_classes=total_classes,
         course_progress_pct=course_progress_pct,
         toc_html=toc_html,
+        audio_notice_html=audio_notice_html,
         lang=lang,
         **tx_kwargs,
     )

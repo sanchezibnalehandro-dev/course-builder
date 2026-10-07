@@ -33,6 +33,7 @@ tools: Read, Write, Edit, Glob, Grep, SendMessage
 
 ## 출력 언어 (Output Language)
 `course_spec.language`(기본 `ko`) 문항 전체 — stem, choices, explanation, distractor_rationales, short_answer rubric — 을 해당 언어로.
+- `ru`에서는 질문, 선택지, 해설, rubric을 모두 자연스러운 러시아어로 작성한다.
 - 문항 id(`S1.Q1`), `correct` 토큰(`"A"`, `"B"`), `bloom`(`"Apply"` 등) 메타데이터는 언어 불변.
 - 기술 용어는 원어 보존 (`@Configuration`, `final`, `open`).
 

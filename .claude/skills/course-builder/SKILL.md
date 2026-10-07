@@ -49,13 +49,14 @@ else:
 - `audience = "intermediate developers"`
 - `depth = "standard"` (intro | standard | deep)
 - `target_duration_min = 120`
-- `language = "ko"` (ko | en)
+- `language = "ko"` (ko | en | ru)
 - `tone = "friendly"` (formal | friendly | socratic)
 
 ### 0-2a. 언어 판별 (language resolution)
 1. 사용자가 명시: "영어로", "in English", "English course", "영문으로" → `language = "en"`.
 2. 사용자가 "한국어로", "한글로", "국문으로" → `language = "ko"`.
-3. 명시 없음 → `"ko"` 기본. **사용자 발화 언어만으로 자동 추론하지 않는다**(영어로 질문했다고 영어 강의라고 가정 금지).
+3. 사용자가 "по-русски", "на русском", "Russian course", "in Russian" → `language = "ru"`.
+4. 명시 없음 → `"ko"` 기본. **사용자 발화 언어만으로 자동 추론하지 않는다**(영어로 질문했다고 영어 강의라고 가정 금지).
 
 `language`는 Course Spec `01_architect_course_spec.json`에 저장되어 하류 에이전트 전체가 참조한다. 한 번 확정 후 재실행 전까지 변경 금지 — 중간에 바꾸면 artifact 불일치 발생.
 
@@ -165,7 +166,7 @@ Phase 4 완료 후 `TeamDelete("qa-loop")`.
 |---|---|---|---|
 | 1 | asset-builder | gate: `coherence_report.overall == "pass"` 확인 (실패 시 `BUILD_REFUSED`) | hard fail |
 | 2 | asset-builder | Marp HTML 재렌더 (모든 `slide.source.md` → `slide.html`) | per-class soft fail (`asset_errors`) |
-| 3 | asset-builder | Marp PNG 렌더 (player 용) — `SKIP_PLAYER=1` 또는 player 미사용 시 skip 가능 | per-class soft fail |
+| 3 | asset-builder | Marp PNG 렌더 (player 용). 현재 build script는 `SKIP_PLAYER=1`이어도 PNG를 렌더 | per-class soft fail |
 | 4 | **tts-synthesizer** (위임) | per-class TTS 합성 — `OPENAI_API_KEY` 있고 `SKIP_TTS!=1`일 때만. audio/full.mp3 캐시 hit 시 skip | per-class soft fail (보고 `TTS_FAILED <cls>`) |
 | 5 | asset-builder | Manifest 합성 (`scripts/synth-manifest.py`) | hard fail |
 | 6 | asset-builder | Player HTML 생성 (`scripts/generate-player.py`) — `SKIP_PLAYER=1`이면 skip | warn only |
@@ -180,12 +181,12 @@ Phase 4 완료 후 `TeamDelete("qa-loop")`.
 |---|---|---|
 | `SKIP_TTS=1` | TTS step 4 생략 (슬라이드/노트/트랜스크립트만) | `OPENAI_API_KEY` 불요 |
 | `FORCE_TTS=1` | 기존 audio 무시하고 재합성 | — |
-| `SKIP_PLAYER=1` | step 3(PNG) + step 6(player HTML) 동시 생략 — slides-only 사용 사례 | ffmpeg 의존 일부 우회 |
+| `SKIP_PLAYER=1` | step 6(player HTML) 생략. 현재 build script의 PNG 렌더는 유지 | — |
 
 ### 5-3. TTS 위임 호출 규약
 `asset-builder` 는 빌드 중 각 class 의 transcript.txt 를 발견할 때마다 `tts-synthesizer` 의 표준 호출을 트리거한다. 표준 인자:
 - transcript path, audio out_dir
-- `--language <ko|en>` (course_spec 에서 추출)
+- `--language <ko|en|ru>` (course_spec 에서 추출)
 - `--beats <path>` (있을 때) — speaker affect overlay
 - `--slide-source <path>` (beats 가 있을 때 동반) — 정확 매핑
 

@@ -27,6 +27,7 @@ Course Spec의 각 섹션을 받아 **class 단위로 분해**한다. 섹션 LO�
 
 ## 출력 언어 (Output Language)
 `course_spec.language`를 따른다(기본 `ko`). class title, summary 등 모든 자연어 필드를 해당 언어로.
+- `ru`에서는 title, summary, prerequisites를 자연스러운 러시아어로 작성한다.
 - id/slug(S1.C1, 01-what-is-rsc)는 언어 불변.
 - 이미 생성된 LO의 언어를 임의로 바꾸지 않는다 (architect 권한).
 

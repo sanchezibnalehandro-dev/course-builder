@@ -30,31 +30,53 @@ mkdir -p "$WORKSPACE"
 : > "$LOG"
 log(){ echo "$(date -u +%FT%TZ) $*" | tee -a "$LOG"; }
 
+# Prefer python3 where it is a real interpreter, but fall back to python on
+# Windows installations where python3.exe is only the Microsoft Store alias.
+PYTHON_BIN=""
+for candidate in python3 python; do
+  if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c 'import sys' >/dev/null 2>&1; then
+    PYTHON_BIN="$candidate"
+    break
+  fi
+done
+if [ -z "$PYTHON_BIN" ]; then
+  log "ERROR: Python 3.10+ missing"
+  exit 19
+fi
+
+# Keep Python subprocess I/O UTF-8 on Windows consoles whose legacy code page
+# cannot encode status symbols or Russian text.
+export PYTHONUTF8="${PYTHONUTF8:-1}"
+
+json_value(){
+  "$PYTHON_BIN" -c 'import json,sys; data=json.load(open(sys.argv[1], encoding="utf-8")); value=data.get(sys.argv[2], sys.argv[3]); print("" if value is None else value)' "$1" "$2" "${3:-}"
+}
+
 # ── Gate ───────────────────────────────────────────────────────────────
 REPORT="$WORKSPACE/99_coherence_report.json"
 if [ ! -f "$REPORT" ]; then
   log "BUILD_REFUSED: $REPORT not found"
   exit 10
 fi
-if command -v jq >/dev/null 2>&1; then
-  OVERALL=$(jq -r '.overall' "$REPORT")
-  if [ "$OVERALL" != "pass" ]; then
-    log "BUILD_REFUSED: coherence.overall=$OVERALL"
-    exit 11
-  fi
-  # Sanity check: JSON verdict must match MD header (catches reviewer dual-write bug)
-  REPORT_MD="$WORKSPACE/99_coherence_report.md"
-  if [ -f "$REPORT_MD" ]; then
-    MD_VERDICT=$(grep -m1 '^## VERDICT:' "$REPORT_MD" | awk '{print $3}' | tr '[:upper:]' '[:lower:]' || echo "")
-    if [ -n "$MD_VERDICT" ] && [ "$MD_VERDICT" != "$OVERALL" ]; then
-      log "WARN: verdict mismatch — JSON=$OVERALL, MD=$MD_VERDICT (reviewer dual-write drift; build continues)"
-    fi
+if ! OVERALL=$(json_value "$REPORT" overall "" 2>/dev/null); then
+  log "BUILD_REFUSED: invalid coherence report JSON"
+  exit 11
+fi
+if [ "$OVERALL" != "pass" ]; then
+  log "BUILD_REFUSED: coherence.overall=$OVERALL"
+  exit 11
+fi
+# Sanity check: JSON verdict must match MD header (catches reviewer dual-write bug)
+REPORT_MD="$WORKSPACE/99_coherence_report.md"
+if [ -f "$REPORT_MD" ]; then
+  MD_VERDICT=$(grep -m1 '^## VERDICT:' "$REPORT_MD" | awk '{print $3}' | tr '[:upper:]' '[:lower:]' || echo "")
+  if [ -n "$MD_VERDICT" ] && [ "$MD_VERDICT" != "$OVERALL" ]; then
+    log "WARN: verdict mismatch — JSON=$OVERALL, MD=$MD_VERDICT (reviewer dual-write drift; build continues)"
   fi
 fi
 
 # ── Tool checks (always required) ──────────────────────────────────────
 command -v marp >/dev/null 2>&1 || { log "ERROR: marp missing"; exit 20; }
-command -v zip  >/dev/null 2>&1 || { log "ERROR: zip missing";  exit 21; }
 
 # Load env for TTS (must come before TTS gate so OPENAI_API_KEY is visible)
 if [ -f "$ROOT_DIR/.env" ]; then
@@ -101,7 +123,7 @@ log "Marp HTML: $OK_HTML/$((OK_HTML+FAIL_HTML)) · PNG: $OK_PNG/$((OK_PNG+FAIL_P
 # ── Step 3: TTS synthesis (delegated to tts-synthesizer) ──────────────
 # TTS_WRAP and TTS_WILL_RUN are computed at the top of the script.
 # Read language from Course Spec for language-aware TTS defaults.
-COURSE_LANG=$(jq -r '.language // "ko"' "$WORKSPACE/01_architect_course_spec.json" 2>/dev/null || echo "ko")
+COURSE_LANG=$(json_value "$WORKSPACE/01_architect_course_spec.json" language "ko" 2>/dev/null || echo "ko")
 if [ "$TTS_WILL_RUN" = "1" ]; then
   OK_TTS=0; SKIP_TTS_CNT=0; FAIL_TTS=0
   while IFS= read -r -d '' t; do
@@ -117,11 +139,11 @@ if [ "$TTS_WILL_RUN" = "1" ]; then
     beats_arg=""
     for candidate in "$WORKSPACE"/03_class_*_beats.json; do
       [ -f "$candidate" ] || continue
-      c_id=$(jq -r '.class_id' "$candidate" 2>/dev/null || echo "")
+      c_id=$(json_value "$candidate" class_id "" 2>/dev/null || echo "")
       # Heuristic match: if cls.json has class_id matching candidate's
       cls_json="$cls_dir/class.json"
       if [ -f "$cls_json" ]; then
-        ccid=$(jq -r '.id // empty' "$cls_json" 2>/dev/null)
+        ccid=$(json_value "$cls_json" id "" 2>/dev/null || echo "")
         if [ "$ccid" = "$c_id" ]; then
           beats_arg="--beats $candidate"
           break
@@ -158,7 +180,7 @@ fi
 # ── Step 4: Manifest synthesis ────────────────────────────────────────
 SYNTH="$ROOT_DIR/scripts/synth-manifest.py"
 if [ -f "$SYNTH" ]; then
-  python3 "$SYNTH" "$COURSE_ROOT" >>"$LOG" 2>&1 || { log "ERROR: manifest synthesis failed"; exit 30; }
+  "$PYTHON_BIN" "$SYNTH" "$COURSE_ROOT" >>"$LOG" 2>&1 || { log "ERROR: manifest synthesis failed"; exit 30; }
   log "Manifest synthesized"
 else
   log "WARN: $SYNTH missing — manifest not refreshed"
@@ -167,7 +189,7 @@ fi
 # ── Step 5: Player HTML ───────────────────────────────────────────────
 PLAYER_GEN="$ROOT_DIR/scripts/generate-player.py"
 if [ -f "$PLAYER_GEN" ] && [ "${SKIP_PLAYER:-0}" != "1" ]; then
-  python3 "$PLAYER_GEN" "$COURSE_ROOT" >>"$LOG" 2>&1 || log "WARN: player generation failed"
+  "$PYTHON_BIN" "$PLAYER_GEN" "$COURSE_ROOT" >>"$LOG" 2>&1 || log "WARN: player generation failed"
   log "Player HTML generated"
 fi
 
@@ -187,8 +209,14 @@ log "SSML: $SSML_OK OK, $SSML_WARN warn"
 
 # ── Step 7: Bundle ────────────────────────────────────────────────────
 rm -rf "$BUILD_DIR"; mkdir -p "$BUILD_DIR"
-( cd "$COURSE_ROOT" && zip -qr "build/bundle.zip" . \
-    -x 'build/*' -x '_workspace/*' -x '.DS_Store' -x '*/.*' )
+if command -v zip >/dev/null 2>&1; then
+  ( cd "$COURSE_ROOT" && zip -qr "build/bundle.zip" . \
+      -x 'build/*' -x '_workspace/*' -x '.DS_Store' -x '*/.*' )
+else
+  PACKAGE="$ROOT_DIR/scripts/package-bundle.py"
+  [ -f "$PACKAGE" ] || { log "ERROR: zip missing and fallback $PACKAGE not found"; exit 21; }
+  "$PYTHON_BIN" "$PACKAGE" "$COURSE_ROOT" >>"$LOG" 2>&1 || { log "ERROR: bundle packaging failed"; exit 31; }
+fi
 SIZE=$(du -h "$BUILD_DIR/bundle.zip" | awk '{print $1}')
 log "Bundle: $BUILD_DIR/bundle.zip ($SIZE)"
 

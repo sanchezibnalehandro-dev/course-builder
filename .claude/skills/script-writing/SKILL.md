@@ -50,7 +50,7 @@ transcript는 **귀로 듣는 콘텐츠**다. note를 그대로 낭독하면 부
 ## 규칙
 
 ### 문장 길이
-- 영어 ≤25 단어, 한국어 ≤20 어절
+- 영어·러시아어 ≤25단어, 한국어 ≤20어절
 - 한 호흡에 읽을 수 있는 길이
 
 ### 축약·구어체 허용
@@ -97,14 +97,15 @@ pause 권장값:
 
 ### Voice별 발화 속도 (char/sec, speed=1.0 기준)
 
-| 엔진 | Voice | ko 실측 | en 실측 |
-|------|-------|---------|---------|
-| OpenAI `gpt-4o-mini-tts` | `nova` | ≈4.3 | ≈3.8 (est.) |
-| OpenAI `tts-1` / `tts-1-hd` | 기본값 | ≈4.2 | ≈3.7 (est.) |
-| edge-tts | `ko-KR-SunHiNeural` | ≈4.3 | — |
-| edge-tts | `en-US-*Neural` | — | ≈3.5 |
+| 엔진 | Voice | ko 실측 | en 실측 | ru 초기값 |
+|------|-------|---------|---------|-----------|
+| OpenAI `gpt-4o-mini-tts` | `nova` | ≈4.3 | ≈3.8 (est.) | ≈4.0 (미보정) |
+| OpenAI `tts-1` / `tts-1-hd` | 기본값 | ≈4.2 | ≈3.7 (est.) | ≈3.5 (미보정) |
+| edge-tts | `ko-KR-SunHiNeural` | ≈4.3 | — | — |
+| edge-tts | `en-US-*Neural` | — | ≈3.5 | — |
+| edge-tts | `ru-RU-SvetlanaNeural` | — | — | ≈3.5 (미보정) |
 
-> 2026-04-22 실측 — 13~14 슬라이드 단위 표본 기반. 추가 voice/언어는 실행 시 보강.
+> 2026-04-22 ko/en 실측 — 13~14 슬라이드 단위 표본 기반. ru 값은 초기 추정치이며 실제 합성 후 prior-run calibration으로 교체.
 
 ### Script 길이 공식 (Bloom/affect에 관계없이 duration 목표 역산)
 
@@ -191,7 +192,7 @@ class-planner의 `speaker_affect` 필드를 문체·속도에 반영:
 - 톤 변경은 전체 재작성 (부분 교체하면 위화감)
 
 ## 체크리스트
-- [ ] 모든 문장 ≤25 단어 (한국어 ≤20 어절)
+- [ ] 모든 문장 ≤25단어 (한국어 ≤20어절)
 - [ ] raw code/긴 숫자/URL 없음
 - [ ] `[slide N]` cue 수 == slide.source.md 슬라이드 수
 - [ ] **각 슬라이드 내레이션이 여러 줄로 분할됨 (한 줄에 몰아쓰기 금지) — subtitle-sync 추적 가능성**

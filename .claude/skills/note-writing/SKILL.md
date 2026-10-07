@@ -40,7 +40,7 @@ note는 학습자가 **정독**하는 본문이다. slide는 요약, transcript�
 | Pitfalls | 15% | 180자 |
 | Recap | 5% | 60자 |
 
-영어면 400~900 단어, 한국어면 800~1600자.
+영어와 러시아어면 400~900단어, 한국어면 800~1600자.
 
 ## Cross-reference 규칙
 
@@ -70,7 +70,7 @@ note는 학습자가 **정독**하는 본문이다. slide는 요약, transcript�
 ### Example
 - 실행 가능한 코드 or 구체 시나리오
 - 코드는 `~~~lang` 블록
-- 주석은 한국어 tone이면 한국어, formal tone이면 영어
+- 코드 주석은 course language를 따른다 (`ru`면 러시아어)
 
 ### Pitfalls
 - **흔한 오해**: 학습자가 실제로 할 법한 실수
@@ -101,7 +101,7 @@ note는 학습자가 **정독**하는 본문이다. slide는 요약, transcript�
 ## 체크리스트
 - [ ] LO를 맨 위 blockquote에 명시했는가
 - [ ] 5부 구조 유지
-- [ ] 한국어 800~1600자 (영어 400~900 단어)
+- [ ] 한국어 800~1600자 (영어·러시아어 400~900단어)
 - [ ] slide/class cross-ref가 실제 존재 id인가
 - [ ] Pitfalls이 정답 반복이 아니라 오해 교정인가
 - [ ] Recap이 정확히 3개 bullet인가

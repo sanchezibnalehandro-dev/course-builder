@@ -226,10 +226,10 @@ This project tackles all four:
 | [Marp CLI](https://marp.app/) | Slide rendering (HTML + PNG) | `npm install -g @marp-team/marp-cli` |
 | ffmpeg | Audio silence + concat | `brew install ffmpeg` |
 | `openai` Python SDK | OpenAI TTS engine | `pip install openai` |
-| `jq` (optional) | Manifest inspection | `brew install jq` |
+| `jq` (optional) | Manifest inspection; build uses Python when absent | `brew install jq` |
 | `edge-tts` (optional) | Free fallback TTS | `pip install edge-tts` |
 | `xmllint` (optional) | SSML validation | macOS built-in |
-| Claude Code or similar | To run the agent orchestrator | See [Agent setup](#running-the-orchestrator) |
+| Codex, Claude Code, or similar | To run the agent orchestrator | See [Running the orchestrator](#running-the-orchestrator) |
 
 ### Environment setup
 
@@ -251,6 +251,26 @@ which marp ffmpeg
 ```
 
 ### Running the orchestrator
+
+#### Codex (repo-local adapter)
+
+Codex discovers `AGENTS.md` and `.agents/skills/course-builder/SKILL.md` from the repository root. Start a fresh Codex session in this directory and ask, for example:
+
+```text
+Создай тестовый 10-минутный курс по основам prompt engineering на русском, автоматически до конца
+```
+
+The Codex adapter defaults new courses to Russian (`language="ru"`), reuses the canonical role/domain instructions under `.claude/`, and preserves the same `_workspace/` and `course/` contracts. Korean (`ko`) and English (`en`) remain supported. You can explicitly invoke the skill as `$course-builder`.
+
+On Windows, use Git Bash for the existing shell pipeline. The build automatically selects a working `python`/`python3`, reads JSON without `jq`, and packages with Python when the `zip` executable is absent:
+
+```bash
+SKIP_TTS=1 bash .claude/skills/asset-build/scripts/build-bundle.sh course
+```
+
+`SKIP_TTS=1` verifies the complete text, Marp, manifest, player, quiz, and ZIP path without an API key. OpenAI TTS additionally requires the `openai` Python package and `OPENAI_API_KEY`.
+
+#### Claude Code
 
 The orchestrator (`.claude/skills/course-builder/SKILL.md`) is designed to be invoked from [Claude Code](https://claude.com/claude-code) or any agent platform that loads `.claude/agents/` and `.claude/skills/`. From a fresh Claude Code session in this directory, simply say:
 
@@ -713,4 +733,4 @@ MIT — see `LICENSE` file. Use freely, contribute improvements back welcome.
 - **OpenAI** `gpt-4o-mini-tts` with tone-instruction support
 - **Claude Code + Opus 4** as the agent runtime during development
 
-Built iteratively during 2026-04-22 / 2026-04-23 sessions. 
+Built iteratively during 2026-04-22 / 2026-04-23 sessions.

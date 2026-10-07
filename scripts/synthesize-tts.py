@@ -45,6 +45,12 @@ DEFAULT_INSTRUCTIONS_EN = (
     "soft emphasis. Conversational yet focused."
 )
 
+DEFAULT_INSTRUCTIONS_RU = (
+    "Дружелюбный, ясный голос преподавателя технического курса на русском языке. "
+    "Естественное дыхание и умеренный темп. Вопросы произноси с лёгкой восходящей "
+    "интонацией, ключевые мысли подчёркивай мягко. Тон живой, но собранный."
+)
+
 # Affect overlay — maps beat.speaker_affect substring to extra tone instruction.
 # Substring match (beat sheets may use compound phrases like "호기심 유발" / "curious and warm").
 AFFECT_OVERLAYS_KO = {
@@ -90,17 +96,43 @@ AFFECT_OVERLAYS_EN = {
     "emphasis": "Emphatic tone. Deliver key points with weight.",
 }
 
+AFFECT_OVERLAYS_RU = {
+    "любопыт": "Интонация с любопытством и ожиданием ответа.",
+    "интриг": "Слегка интригующий тон; не раскрывай ответ слишком рано.",
+    "твёрд": "Твёрдый, декларативный тон с ясным выводом.",
+    "решитель": "Решительный тон без лишних оговорок.",
+    "дружелюб": "Тёплый, непринуждённый разговорный тон.",
+    "спокой": "Спокойный и отчётливый объясняющий тон.",
+    "ясн": "Точный, собранный тон без расплывчатых формулировок.",
+    "пошаг": "Терпеливый тон пошагового наставника.",
+    "энерг": "Энергичный тон живой демонстрации.",
+    "демонстрац": "Говори так, будто показываешь действие прямо сейчас.",
+    "вопрос": "Вопросительная интонация, приглашающая подумать вместе.",
+    "пауза": "Оставляй слушателю пространство для размышления.",
+    "уверен": "Уверенный завершающий тон, чётко подведи итог.",
+    "серьёз": "Серьёзный, весомый тон.",
+    "эмпат": "Тёплый, понимающий тон.",
+    "итог": "Тон краткого подведения итогов и выделения главного.",
+    "акцент": "Выразительно подчеркни ключевую мысль.",
+}
+
 
 def affect_to_instruction(affect: str, base: str, language: str = "ko") -> str:
     """Overlay matching affect entries onto base instructions (language-aware)."""
     if not affect:
         return base
-    overlays = AFFECT_OVERLAYS_EN if language == "en" else AFFECT_OVERLAYS_KO
+    overlays = {
+        "en": AFFECT_OVERLAYS_EN,
+        "ru": AFFECT_OVERLAYS_RU,
+    }.get(language, AFFECT_OVERLAYS_KO)
     affect_l = affect.lower()
     hits = [v for k, v in overlays.items() if k.lower() in affect_l]
     if not hits:
         return base
-    suffix = " Additional tone: " if language == "en" else " 추가 톤 지시: "
+    suffix = {
+        "en": " Additional tone: ",
+        "ru": " Дополнительная интонация: ",
+    }.get(language, " 추가 톤 지시: ")
     return base + suffix + " ".join(hits)
 
 
@@ -305,13 +337,14 @@ def main():
     ap.add_argument("transcript", type=Path)
     ap.add_argument("out_dir", type=Path)
     ap.add_argument("--engine", choices=list(ENGINES), default="openai")
-    ap.add_argument("--language", choices=["ko", "en"], default="ko",
+    ap.add_argument("--language", choices=["ko", "en", "ru"], default="ko",
                     help="course language — drives default voice, instructions, and affect overlay map")
     ap.add_argument("--model", default="gpt-4o-mini-tts",
                     help="openai only: gpt-4o-mini-tts | tts-1 | tts-1-hd")
     ap.add_argument("--voice", default=None,
                     help="openai: nova|coral|shimmer|... (multilingual) ; "
-                         "edge: ko-KR-SunHiNeural (ko) | en-US-AriaNeural (en)")
+                         "edge: ko-KR-SunHiNeural (ko) | en-US-AriaNeural (en) | "
+                         "ru-RU-SvetlanaNeural (ru)")
     ap.add_argument("--rate", default="+0%", help="edge only")
     ap.add_argument("--instructions", default=None,
                     help="openai gpt-4o only: tone instructions (defaults by --language)")
@@ -326,12 +359,18 @@ def main():
 
     if args.voice is None:
         if args.engine == "openai":
-            args.voice = "nova"  # multilingual (handles both ko and en)
+            args.voice = "nova"  # multilingual (handles ko, en, and ru)
         else:
-            args.voice = "en-US-AriaNeural" if args.language == "en" else "ko-KR-SunHiNeural"
+            args.voice = {
+                "en": "en-US-AriaNeural",
+                "ru": "ru-RU-SvetlanaNeural",
+            }.get(args.language, "ko-KR-SunHiNeural")
 
     if args.instructions is None:
-        args.instructions = DEFAULT_INSTRUCTIONS_EN if args.language == "en" else DEFAULT_INSTRUCTIONS_KO
+        args.instructions = {
+            "en": DEFAULT_INSTRUCTIONS_EN,
+            "ru": DEFAULT_INSTRUCTIONS_RU,
+        }.get(args.language, DEFAULT_INSTRUCTIONS_KO)
 
     if not args.transcript.exists():
         sys.exit(f"ERROR: {args.transcript} not found")

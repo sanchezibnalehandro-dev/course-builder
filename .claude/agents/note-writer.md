@@ -44,8 +44,8 @@ class beats → 학습자 읽기용 **심화 노트** (`note.md`). slide는 요�
 
 ## 출력 언어 (Output Language)
 `course_spec.language`(기본 `ko`) 전체 본문 — Intro/Concept/Example/Pitfalls/Recap 모든 섹션 — 을 해당 언어로.
-- 분량 규칙: `ko` → 800~1600자, `en` → 400~900 words (위 "길이" 항목과 일치).
-- 5부 섹션 헤딩은 `ko`면 `## 개요 / ## 핵심 개념 / ## 예시 / ## 흔한 실수 / ## 복습`, `en`이면 `## Intro / ## Concept / ## Example / ## Pitfalls / ## Recap`.
+- 분량 규칙: `ko` → 800~1600자, `en`과 `ru` → 400~900 words (위 "길이" 항목과 일치).
+- 5부 섹션 헤딩은 `ko`면 `## 개요 / ## 핵심 개념 / ## 예시 / ## 흔한 실수 / ## 복습`, `en`이면 `## Intro / ## Concept / ## Example / ## Pitfalls / ## Recap`, `ru`면 `## Введение / ## Ключевая идея / ## Пример / ## Типичные ошибки / ## Итоги`.
 - Cross-ref 포맷(`[slide 3]`, `[S2.C1]`)과 LO blockquote id는 언어 불변.
 
 ## 입력

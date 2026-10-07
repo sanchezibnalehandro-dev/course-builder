@@ -31,8 +31,9 @@ tools: Read, Write, Edit, Glob, Grep, Bash, SendMessage, TaskCreate
    - note가 slide에 없는 개념을 새로 도입하면 경고
 
 5. **Tone 일관성**
+   - 모든 자연어 자산과 player chrome이 Course Spec `language`(`ko`/`en`/`ru`)를 따르는가
    - 한 class 내 slide/note/transcript의 톤 파라미터(friendly/formal/socratic) 준수
-   - 문체 급변(반말 ↔ 존댓말 혼재 등) 검출
+   - 문체 급변(반말 ↔ 존댓말, 러시아어 `ты` ↔ `вы` 혼재 등) 검출
 
 6. **Quiz 사실 검증**
    - quiz 정답이 note/slide 내용과 모순되지 않는가

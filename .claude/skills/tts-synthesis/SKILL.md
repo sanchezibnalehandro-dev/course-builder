@@ -20,6 +20,8 @@ python3 scripts/synthesize-tts.py \
 ```
 위는 기본값 (openai + nova + speed 1.3 + default 친근 ko instructions)을 사용.
 
+러시아어 course는 `--language ru`를 전달한다. OpenAI engine은 러시아어 instructions/affect를 사용하고, edge engine 기본 voice는 `ru-RU-SvetlanaNeural`이다.
+
 ### 래퍼 (pipefail 보장)
 ```bash
 bash .claude/skills/tts-synthesis/scripts/run.sh \
@@ -31,6 +33,7 @@ bash .claude/skills/tts-synthesis/scripts/run.sh \
 ```bash
 # edge-tts로 (오프라인, rate limit 있음)
 --engine edge --voice ko-KR-SunHiNeural
+--engine edge --language ru --voice ru-RU-SvetlanaNeural
 
 # OpenAI 다른 voice/모델
 --voice shimmer
@@ -68,7 +71,7 @@ Phase 5 (build):
 
 자동 호출 조건 (모두 충족):
 - `coherence_report.overall == "pass"` — gate 통과
-- `OPENAI_API_KEY` 존재 (없으면 edge-tts 폴백)
+- `OPENAI_API_KEY` 존재. 키가 없으면 build는 TTS를 skip하며, edge-tts는 standalone 호출에서 `--engine edge`를 명시할 때만 사용
 - `SKIP_TTS != 1`
 - `audio/full.mp3` 미존재 또는 `FORCE_TTS=1`
 

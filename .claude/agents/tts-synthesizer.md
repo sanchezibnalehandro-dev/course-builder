@@ -16,11 +16,11 @@ class transcript을 **재생 가능한 오디오 자산**으로 변환한다. `t
 
 ### 엔진 선택
 - 기본: OpenAI `gpt-4o-mini-tts` + voice `nova` + speed 1.3
-- `OPENAI_API_KEY` 미설정 → edge-tts (offline) 자동 폴백, 합성 결과에 `engine: "edge"` 메타 명시
+- `OPENAI_API_KEY` 미설정 시 build는 TTS를 skip한다. 사용자가 standalone edge 합성을 요청한 경우에만 `--engine edge`를 명시하고 결과에 `engine: "edge"` 메타를 기록한다.
 - 사용자가 voice/speed/engine을 명시하면 우선 적용
 
 ### 언어 처리
-- `_workspace/01_architect_course_spec.json` 의 `language` 를 읽어 `--language ko|en` 으로 전달
+- `_workspace/01_architect_course_spec.json` 의 `language` 를 읽어 `--language ko|en|ru` 으로 전달
 - 명시 없으면 `ko` 가정. 자동 추정 금지 (orchestrator 와 동일 원칙)
 
 ### Beat-aware affect overlay

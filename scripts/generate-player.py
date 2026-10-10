@@ -28,6 +28,7 @@ _PLAYER_STRINGS = {
     "ko": {
         "menu_title": "목차 열기/닫기",
         "home": "홈",
+        "class_label": "수업",
         "slide_label": "슬라이드",
         "slide_unit": "장",
         "min_unit": "분",
@@ -78,6 +79,7 @@ _PLAYER_STRINGS = {
     "en": {
         "menu_title": "Toggle TOC",
         "home": "Home",
+        "class_label": "Class",
         "slide_label": "Slide",
         "slide_unit": " slides",
         "min_unit": " min",
@@ -128,6 +130,7 @@ _PLAYER_STRINGS = {
     "ru": {
         "menu_title": "Открыть или закрыть содержание",
         "home": "Главная",
+        "class_label": "Урок",
         "slide_label": "Слайд",
         "slide_unit": " слайдов",
         "min_unit": " мин",
@@ -246,82 +249,88 @@ PLAYER_TMPL = """<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title}</title>
 <style>
+  :root{{--ink:#17232d;--ink-2:#22313d;--paper:#f5f1e8;--surface:#fffdf8;--line:#d9d2c5;--muted:#6b746f;--signal:#ff5c35;--signal-dark:#d84524;--lime:#b9e34b;--focus:#376fba;--shadow:0 18px 50px rgba(23,35,45,.12)}}
   *{{box-sizing:border-box}}
-  body{{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard",sans-serif;background:#0f1115;color:#e8eaed;line-height:1.55}}
-  a{{color:#7cb7ff;text-decoration:none}}a:hover{{text-decoration:underline}}
-  header{{padding:12px 20px;border-bottom:1px solid #1f2430;display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}}
-  header h1{{font-size:18px;margin:0;font-weight:600}}
-  .meta{{color:#8b95a7;font-size:13px}}
-  button.menu-toggle{{background:transparent;border:1px solid #2a3345;color:#e8eaed;border-radius:6px;padding:6px 10px;font-size:14px;cursor:pointer}}
-  button.menu-toggle:hover{{background:#222a3a}}
-  /* Progress bar */
-  #progress{{padding:10px 20px;background:#12151c;border-bottom:1px solid #1f2430;display:flex;gap:14px;align-items:center;font-size:13px;color:#8b95a7}}
-  #progress .bar{{flex:1;height:4px;background:#1f2430;border-radius:2px;overflow:hidden}}
-  #progress .bar .fill{{height:100%;background:linear-gradient(90deg,#2d6cdf,#5ea0ff);border-radius:2px;transition:width .3s ease}}
-  #progress .label{{white-space:nowrap}}
-  #progress strong{{color:#e8eaed;font-weight:600}}
-  /* Sidebar */
-  aside#toc{{background:#12151c;border-right:1px solid #1f2430;padding:16px 14px;overflow-y:auto;max-height:calc(100vh - 130px);position:sticky;top:0}}
-  aside#toc h3{{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#8b95a7;margin:14px 0 6px 0;font-weight:500}}
-  aside#toc h3:first-child{{margin-top:0}}
-  aside#toc ul{{list-style:none;padding:0;margin:0 0 12px 0}}
-  aside#toc li{{padding:6px 8px;border-radius:6px;margin-bottom:2px;font-size:13px}}
-  aside#toc a{{color:#c4cad6;text-decoration:none;display:block}}
-  aside#toc a:hover{{color:#fff}}
-  aside#toc li:hover{{background:#1a1f29}}
-  aside#toc li.current{{background:#1a2e4a;border-left:3px solid #2d6cdf}}
-  aside#toc li.current a{{color:#fff;font-weight:600}}
-  aside#toc li.quiz a{{color:#3a8a4f}}
-  main{{display:grid;grid-template-columns:220px 1fr 320px;gap:16px;padding:16px;max-width:1700px;margin:0 auto;align-items:start}}
-  @media(max-width:1280px){{main{{grid-template-columns:1fr 320px}} aside#toc{{display:none}} aside#toc.open{{display:block;position:fixed;top:0;left:0;width:260px;height:100vh;z-index:100;box-shadow:4px 0 20px rgba(0,0,0,.4);max-height:100vh}}}}
-  @media(max-width:980px){{main{{grid-template-columns:1fr}}}}
-  #stage{{background:#181c26;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}}
-  #slide-wrap{{aspect-ratio:16/9;background:#000;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center}}
-  #slide{{max-width:100%;max-height:100%;display:block}}
-  #controls{{display:flex;gap:8px;align-items:center;padding:6px 2px}}
-  button{{background:#222a3a;color:#e8eaed;border:1px solid #2a3345;border-radius:6px;padding:8px 14px;font-size:14px;cursor:pointer}}
-  button:hover{{background:#2a3547}}
-  button:disabled{{opacity:.4;cursor:not-allowed}}
-  button.play{{background:#2d6cdf;border-color:#2d6cdf;font-weight:600;min-width:100px}}
-  button.play:hover{{background:#3578e5}}
-  button.speed{{min-width:58px;font-variant-numeric:tabular-nums;font-weight:500}}
-  #pos{{color:#8b95a7;font-size:13px;margin-left:auto}}
+  body{{margin:0;font-family:"Segoe UI Variable","Segoe UI",Arial,sans-serif;background:var(--paper);color:var(--ink);line-height:1.55;overflow-x:hidden}}
+  a{{color:var(--signal-dark);text-decoration-thickness:1px;text-underline-offset:3px}}a:hover{{color:#a93218}}
+  button,a{{-webkit-tap-highlight-color:transparent}}
+  button:focus-visible,a:focus-visible{{outline:3px solid var(--focus);outline-offset:3px}}
+  header{{padding:15px 24px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;gap:16px;align-items:center;flex-wrap:wrap;position:relative}}
+  header::after{{content:"";position:absolute;left:0;bottom:-1px;width:118px;height:3px;background:var(--signal)}}
+  header h1{{font-size:19px;line-height:1.2;margin:0;font-weight:720;letter-spacing:-.025em;min-width:0;overflow-wrap:anywhere}}
+  header .meta{{color:var(--muted);font-size:13px;margin-left:auto}}
+  button.menu-toggle{{background:var(--ink);border:1px solid var(--ink);color:#fff;border-radius:10px;padding:7px 11px;font-size:14px;cursor:pointer}}
+  button.menu-toggle:hover{{background:var(--ink-2)}}
+  #progress{{padding:10px 24px;background:var(--ink);display:flex;gap:14px;align-items:center;font-size:12px;color:#9eaaa6}}
+  #progress .bar{{flex:1;height:5px;background:#33424d;border-radius:999px;overflow:hidden}}
+  #progress .bar .fill{{height:100%;background:var(--lime);border-radius:999px;transition:width .3s ease}}
+  #progress .bar:last-child .fill{{background:var(--signal)}}
+  #progress .label{{white-space:nowrap;text-transform:uppercase;letter-spacing:.06em}}
+  #progress strong{{color:#fff;font-weight:700}}
+  main{{display:grid;grid-template-columns:230px minmax(0,1fr) 340px;gap:18px;padding:22px;width:100%;max-width:1740px;margin:0 auto;align-items:start}}
+  main>*{{min-width:0}}
+  aside#toc{{background:var(--ink);color:#fff;border-radius:16px;padding:18px 14px;overflow-y:auto;max-height:calc(100vh - 150px);position:sticky;top:18px;box-shadow:var(--shadow)}}
+  aside#toc h3{{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#9eaaa6;margin:18px 8px 8px;font-weight:650}}
+  aside#toc h3:first-child{{margin-top:2px}}
+  aside#toc ul{{list-style:none;padding:0;margin:0 0 12px}}
+  aside#toc li{{padding:9px 10px;border-radius:10px;margin-bottom:3px;font-size:13px;border:1px solid transparent}}
+  aside#toc a{{color:#d9dfdc;text-decoration:none;display:block}}
+  aside#toc li:hover{{background:#22313d}}
+  aside#toc li.current{{background:#2b3a45;border-color:#41515d;box-shadow:inset 4px 0 0 var(--signal)}}
+  aside#toc li.current a{{color:#fff;font-weight:700}}
+  aside#toc li.quiz a{{color:var(--lime)}}
+  #stage{{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:11px;min-width:0;box-shadow:var(--shadow)}}
+  #slide-wrap{{aspect-ratio:16/9;background:var(--ink);border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center}}
+  #slide{{width:100%;height:100%;object-fit:contain;display:block}}
+  #controls{{display:flex;gap:8px;align-items:center;padding:7px 2px 2px}}
+  button{{background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px 14px;font:inherit;font-size:14px;font-weight:650;cursor:pointer;transition:transform .14s ease,background .14s ease,border-color .14s ease}}
+  button:hover{{background:#f0eadf;border-color:#bfb6a7;transform:translateY(-1px)}}
+  button:disabled{{opacity:.38;cursor:not-allowed;transform:none}}
+  button.play{{background:var(--signal);border-color:var(--signal);color:#fff;min-width:116px}}
+  button.play:hover{{background:var(--signal-dark);border-color:var(--signal-dark)}}
+  button.speed{{min-width:60px;font-variant-numeric:tabular-nums}}
+  #pos{{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums;margin-left:auto}}
   audio{{width:100%}}
-  .ai-voice-notice{{margin:-4px 2px 0;color:#8b95a7;font-size:12px}}
-  aside#transcript{{background:#181c26;border-radius:12px;padding:16px;max-height:calc(100vh - 200px);overflow-y:auto}}
-  aside#transcript h2{{margin:0 0 10px 0;font-size:14px;color:#8b95a7;font-weight:500;text-transform:uppercase;letter-spacing:.5px}}
-  #tx-body p{{margin:0 0 8px 0;transition:background .2s,color .2s;border-radius:4px;padding:2px 6px}}
-  #tx-body p.active{{background:#1a2e4a;color:#e8eaed;box-shadow:inset 2px 0 0 #2d6cdf}}
-  #thumbs{{display:flex;gap:8px;padding:12px 16px;overflow-x:auto;border-top:1px solid #1f2430;background:#12151c}}
-  .thumb{{flex:0 0 120px;aspect-ratio:16/9;border-radius:4px;overflow:hidden;cursor:pointer;border:2px solid transparent;position:relative}}
-  .thumb.current{{border-color:#2d6cdf}}
+  .no-audio #play,.no-audio #speed,.no-audio audio{{display:none}}
+  .ai-voice-notice{{margin:-3px 2px 0;color:var(--muted);font-size:12px}}
+  aside#transcript{{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px;max-height:calc(100vh - 174px);overflow-y:auto;min-width:0;box-shadow:var(--shadow)}}
+  aside#transcript h2{{margin:0 0 15px;font-size:12px;color:var(--signal-dark);font-weight:750;text-transform:uppercase;letter-spacing:.1em}}
+  #tx-body p{{margin:0 0 9px;transition:background .2s,color .2s;border-radius:8px;padding:5px 8px;color:#34434d;overflow-wrap:anywhere}}
+  #tx-body p.active{{background:#fff0ea;color:var(--ink);box-shadow:inset 3px 0 0 var(--signal)}}
+  #thumbs{{display:flex;gap:10px;padding:14px 22px;overflow-x:auto;border-top:1px solid #2e3d48;background:var(--ink)}}
+  .thumb{{flex:0 0 132px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;position:relative;opacity:.68;transition:opacity .15s ease,transform .15s ease}}
+  .thumb:hover{{opacity:1;transform:translateY(-2px)}}
+  .thumb.current{{border-color:var(--lime);opacity:1}}
   .thumb img{{width:100%;height:100%;object-fit:cover}}
-  .thumb span{{position:absolute;bottom:2px;right:4px;background:rgba(0,0,0,.7);color:#fff;font-size:10px;padding:1px 4px;border-radius:2px}}
-  #end-panel{{margin:4px 0 0 0;padding:16px 20px;background:linear-gradient(135deg,#1a2e4a,#162138);border:1px solid #2d6cdf;border-radius:10px;text-align:center;display:none}}
-  #end-panel.active{{display:block;animation:slideIn .4s ease-out}}
-  @keyframes slideIn{{from{{opacity:0;transform:translateY(10px)}}to{{opacity:1;transform:translateY(0)}}}}
-  #end-panel h2{{margin:0 0 4px 0;font-size:18px;color:#fff}}
-  #end-panel .sub{{color:#8fb3e8;margin-bottom:12px;font-size:13px}}
-  .end-actions{{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}}
-  .btn-cta{{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;transition:transform .1s,background .15s}}
-  .btn-cta.primary{{background:#2d6cdf;color:#fff;border:1px solid #2d6cdf}}
-  .btn-cta.primary:hover{{background:#3578e5;transform:translateY(-1px)}}
-  .btn-cta.secondary{{background:#222a3a;color:#e8eaed;border:1px solid #2a3345}}
-  .btn-cta.secondary:hover{{background:#2a3547}}
-  .btn-cta .label{{font-size:12px;opacity:.75;font-weight:400;display:block;margin-bottom:1px}}
+  .thumb span{{position:absolute;bottom:5px;right:6px;background:rgba(23,35,45,.88);color:#fff;font-size:10px;padding:2px 6px;border-radius:999px}}
+  #end-panel{{margin:5px 0 0;padding:20px 22px;background:#eaf2d2;border:1px solid #c8d99e;border-radius:14px;text-align:left;display:none}}
+  #end-panel.active{{display:block;animation:slideIn .35s ease-out}}
+  @keyframes slideIn{{from{{opacity:0;transform:translateY(8px)}}to{{opacity:1;transform:translateY(0)}}}}
+  #end-panel h2{{margin:0 0 4px;font-size:20px;color:var(--ink)}}
+  #end-panel .sub{{color:#536044;margin:0 0 14px;font-size:13px}}
+  .end-actions{{display:flex;gap:10px;flex-wrap:wrap}}
+  .btn-cta{{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none;transition:transform .14s ease,background .14s ease}}
+  .btn-cta.primary{{background:var(--ink);color:#fff;border:1px solid var(--ink)}}
+  .btn-cta.primary:hover{{background:var(--ink-2);color:#fff;transform:translateY(-1px)}}
+  .btn-cta.secondary{{background:transparent;color:var(--ink);border:1px solid #9daa7e}}
+  .btn-cta.secondary:hover{{background:#dfe9c1;color:var(--ink)}}
+  .btn-cta .label{{font-size:11px;opacity:.7;font-weight:500;display:block}}
   .btn-cta .title{{display:block}}
-  footer{{padding:14px 20px;text-align:center;border-top:1px solid #1f2430;color:#8b95a7;font-size:13px}}
+  footer{{padding:16px 20px;text-align:center;border-top:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:13px}}
   footer a{{margin:0 10px}}
-  /* Resume banner */
-  #resume-banner{{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1a2e4a;border:1px solid #2d6cdf;border-radius:10px;padding:10px 14px;display:none;gap:12px;align-items:center;z-index:60;box-shadow:0 6px 24px rgba(0,0,0,.5);max-width:92%;flex-wrap:wrap}}
+  #resume-banner{{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);border:1px solid #42515c;border-radius:14px;padding:11px 14px;display:none;gap:12px;align-items:center;z-index:60;box-shadow:0 14px 40px rgba(23,35,45,.35);max-width:92%;flex-wrap:wrap}}
   #resume-banner.show{{display:flex}}
-  #resume-banner .text{{font-size:13px;color:#c4cad6}}
+  #resume-banner .text{{font-size:13px;color:#cad2cf}}
   #resume-banner .text strong{{color:#fff}}
-  #resume-banner button{{padding:6px 12px;font-size:13px;margin:0}}
-  #resume-banner button.primary{{background:#2d6cdf;border-color:#2d6cdf;color:#fff;font-weight:600}}
+  #resume-banner button{{padding:6px 11px;font-size:13px;margin:0;background:#2b3a45;border-color:#41515d;color:#fff}}
+  #resume-banner button.primary{{background:var(--signal);border-color:var(--signal);color:#fff}}
+  @media(max-width:1280px){{main{{grid-template-columns:minmax(0,1fr) 340px}}aside#toc{{display:none}}aside#toc.open{{display:block;position:fixed;top:14px;left:14px;width:286px;height:calc(100vh - 28px);z-index:100;max-height:none}}}}
+  @media(max-width:920px){{header .meta{{width:100%;margin-left:48px}}main{{grid-template-columns:1fr;padding:14px}}aside#transcript{{max-height:none}}}}
+  @media(max-width:620px){{header{{padding:12px 14px;gap:9px}}header h1{{order:3;flex:0 0 100%;font-size:17px}}header .meta{{order:4;width:100%;margin-left:0;font-size:12px}}#progress{{padding:9px 14px;gap:8px}}#progress .label:first-child,#progress .bar:first-of-type{{display:none}}main{{display:block;width:100%;max-width:100%;padding:10px}}#stage,aside#transcript{{width:100%;max-width:100%;border-radius:13px;padding:10px}}aside#transcript{{margin-top:18px}}#slide-wrap,#tx-body,#tx-body p{{width:100%;max-width:100%}}#tx-body p{{white-space:normal;word-break:break-word}}#controls{{display:grid;grid-template-columns:1fr 1fr 1fr}}#controls button{{padding:9px 7px}}#pos{{grid-column:1/-1;text-align:center;margin:0}}.thumb{{flex-basis:104px}}}}
+  @media(prefers-reduced-motion:reduce){{*,*::before,*::after{{scroll-behavior:auto!important;animation:none!important;transition:none!important}}}}
 </style>
 </head>
-<body>
+<body class="{body_class}">
 <header>
   <button class="menu-toggle" id="menu-toggle" title="{tx_menu_title}">☰</button>
   <a href="{back_href}">← {tx_home}</a>
@@ -330,7 +339,7 @@ PLAYER_TMPL = """<!DOCTYPE html>
 </header>
 
 <div id="progress">
-  <span class="label"><strong>Class {class_number}</strong> / {total_classes}</span>
+  <span class="label"><strong>{tx_class_label} {class_number}</strong> / {total_classes}</span>
   <div class="bar"><div class="fill" id="course-fill" style="width:{course_progress_pct}%"></div></div>
   <span class="label">{tx_slide_label} <strong id="slide-num">1</strong> / {slide_count}</span>
   <div class="bar"><div class="fill" id="slide-fill"></div></div>
@@ -340,7 +349,7 @@ PLAYER_TMPL = """<!DOCTYPE html>
   <aside id="toc">
 {toc_html}  </aside>
   <div id="stage">
-    <div id="slide-wrap"><img id="slide" alt="slide"/></div>
+    <div id="slide-wrap"><img id="slide" alt="{tx_slide_label}"/></div>
     <div id="controls">
       <button id="prev">◀ {tx_prev}</button>
       <button id="play" class="play">▶ {tx_play}</button>
@@ -351,7 +360,7 @@ PLAYER_TMPL = """<!DOCTYPE html>
     <audio id="audio" preload="auto"></audio>
     {audio_notice_html}
     <section id="end-panel">
-      <h2>🎉 {tx_end_title}</h2>
+      <h2>{tx_end_title}</h2>
       <p class="sub">{tx_end_sub}</p>
       <div class="end-actions">{end_actions_html}</div>
     </section>
@@ -365,13 +374,13 @@ PLAYER_TMPL = """<!DOCTYPE html>
 <section id="thumbs"></section>
 
 <div id="resume-banner" role="dialog" aria-live="polite">
-  <span class="text">🎧 {tx_resume_prefix}: <strong id="resume-pos">—</strong></span>
+  <span class="text">{tx_resume_prefix}: <strong id="resume-pos">—</strong></span>
   <button id="resume-yes" class="primary">{tx_resume_yes}</button>
   <button id="resume-no">{tx_resume_no}</button>
 </div>
 
 <footer>
-  <a href="{quiz_href}">📝 {tx_quiz_cta_footer}</a>
+  <a href="{quiz_href}">{tx_quiz_cta_footer}</a>
   <a href="{back_href}">{tx_back_to_toc}</a>
 </footer>
 
@@ -426,7 +435,10 @@ function loadSlide(i, autoplay, resumeTime) {{
 
   document.querySelectorAll('.thumb').forEach((t, idx) => t.classList.toggle('current', idx === current));
   const cur = document.querySelector('.thumb.current');
-  if (cur) cur.scrollIntoView({{block:'nearest', inline:'center'}});
+  if (cur) {{
+    const targetLeft = cur.offsetLeft - (thumbs.clientWidth - cur.clientWidth) / 2;
+    thumbs.scrollTo({{left:Math.max(0, targetLeft), behavior:'smooth'}});
+  }}
 
   maybeShowEnd();
   saveState();
@@ -594,27 +606,32 @@ QUIZ_TMPL = """<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{section_title} · {tx_quiz_title}</title>
 <style>
-  body{{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;background:#0f1115;color:#e8eaed;line-height:1.6}}
-  .wrap{{max-width:760px;margin:0 auto;padding:24px 20px 80px}}
-  a{{color:#7cb7ff;text-decoration:none}}a:hover{{text-decoration:underline}}
-  h1{{font-size:24px;margin:0 0 4px 0}}
-  .meta{{color:#8b95a7;margin-bottom:24px;font-size:14px}}
-  .q{{background:#181c26;border-radius:12px;padding:20px;margin-bottom:16px}}
-  .q .tag{{display:inline-block;background:#2a3345;color:#9fb0cc;padding:2px 8px;border-radius:4px;font-size:11px;margin-right:6px}}
-  .q h3{{margin:6px 0 14px 0;font-size:16px;line-height:1.5}}
-  .choice{{display:flex;gap:10px;padding:10px 12px;border:1px solid #2a3345;border-radius:6px;margin-bottom:6px;cursor:pointer;align-items:flex-start}}
-  .choice:hover{{background:#202635}}
-  .choice input{{margin-top:4px}}
-  .choice.correct{{border-color:#3a8a4f;background:#1a2a1e}}
-  .choice.wrong{{border-color:#aa4141;background:#2a1a1a}}
-  textarea{{width:100%;background:#0f1115;color:#e8eaed;border:1px solid #2a3345;border-radius:6px;padding:10px;font-family:inherit;font-size:14px;min-height:80px}}
-  .submit{{background:#2d6cdf;border:none;color:#fff;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px}}
-  .submit:hover{{background:#3578e5}}
-  .explain{{background:#12151c;border-left:3px solid #2d6cdf;padding:10px 14px;margin-top:10px;border-radius:4px;font-size:14px;display:none}}
+  :root{{--ink:#17232d;--paper:#f5f1e8;--surface:#fffdf8;--line:#d9d2c5;--muted:#6b746f;--signal:#ff5c35;--signal-dark:#d84524;--lime:#b9e34b;--focus:#376fba}}
+  *{{box-sizing:border-box}}
+  body{{margin:0;font-family:"Segoe UI Variable","Segoe UI",Arial,sans-serif;background:var(--paper);color:var(--ink);line-height:1.6}}
+  .wrap{{max-width:820px;margin:0 auto;padding:34px 22px 90px}}
+  a{{color:var(--signal-dark);text-decoration-thickness:1px;text-underline-offset:3px}}
+  a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{{outline:3px solid var(--focus);outline-offset:3px}}
+  h1{{font-size:clamp(30px,5vw,48px);line-height:1.05;letter-spacing:-.04em;margin:24px 0 8px}}
+  .meta{{color:var(--muted);margin-bottom:28px;font-size:14px}}
+  .q{{background:var(--surface);border:1px solid var(--line);border-top:5px solid var(--ink);border-radius:16px;padding:22px;margin-bottom:18px;box-shadow:0 14px 34px rgba(23,35,45,.08)}}
+  .q .tag{{display:inline-block;background:#e9e4da;color:#59625e;padding:3px 8px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-right:5px}}
+  .q h3{{margin:12px 0 16px;font-size:18px;line-height:1.45}}
+  .choice{{display:flex;gap:11px;padding:12px 13px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;cursor:pointer;align-items:flex-start;transition:background .14s ease,border-color .14s ease,transform .14s ease}}
+  .choice:hover{{background:#f2ede3;border-color:#bfb6a7;transform:translateX(2px)}}
+  .choice input{{margin-top:5px;accent-color:var(--signal)}}
+  .choice.correct{{border-color:#70922a;background:#eaf2d2}}
+  .choice.wrong{{border-color:#c4533a;background:#fff0ea}}
+  textarea{{width:100%;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:12px;font:inherit;font-size:14px;min-height:100px}}
+  .submit{{background:var(--signal);border:1px solid var(--signal);color:#fff;padding:13px 26px;border-radius:10px;font:inherit;font-size:15px;font-weight:750;cursor:pointer;margin-top:12px}}
+  .submit:hover{{background:var(--signal-dark);border-color:var(--signal-dark)}}
+  .explain{{background:#eaf2d2;border-left:4px solid #70922a;padding:12px 14px;margin-top:12px;border-radius:8px;font-size:14px;display:none}}
   .explain.show{{display:block}}
-  .score{{position:sticky;top:0;background:#0f1115;padding:12px 0;border-bottom:1px solid #1f2430;font-size:15px;z-index:10}}
+  .score{{position:sticky;top:0;background:var(--ink);color:#fff;padding:13px 16px;border-radius:10px;font-size:15px;z-index:10;box-shadow:0 8px 22px rgba(23,35,45,.18)}}
   .nav{{margin-bottom:16px}}
   ul{{margin:6px 0 0 18px;padding:0}}li{{margin:4px 0}}
+  @media(max-width:600px){{.wrap{{padding:22px 14px 70px}}.q{{padding:17px;border-radius:13px}}}}
+  @media(prefers-reduced-motion:reduce){{*,*::before,*::after{{animation:none!important;transition:none!important}}}}
 </style>
 </head>
 <body>
@@ -662,9 +679,9 @@ document.getElementById('submit-btn').onclick = () => {{
   const nextStep = document.getElementById('next-step');
   let html = '';
   if (NEXT_HREF) {{
-    html = '<a href="' + NEXT_HREF + '" style="display:inline-block;padding:12px 24px;background:#2d6cdf;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;margin-right:10px">▶ {tx_next_label}: ' + NEXT_TITLE + '</a>';
+    html = '<a href="' + NEXT_HREF + '" style="display:inline-block;padding:12px 24px;background:#17232d;color:#fff;border-radius:10px;font-weight:700;text-decoration:none;margin-right:10px">▶ {tx_next_label}: ' + NEXT_TITLE + '</a>';
   }}
-  html += '<a href="' + BACK_HREF + '" style="display:inline-block;padding:12px 24px;background:#222a3a;color:#e8eaed;border:1px solid #2a3345;border-radius:8px;text-decoration:none">{tx_back_to_toc}</a>';
+  html += '<a href="' + BACK_HREF + '" style="display:inline-block;padding:12px 24px;background:transparent;color:#17232d;border:1px solid #9f988b;border-radius:10px;text-decoration:none">{tx_back_to_toc}</a>';
   nextStep.innerHTML = html;
   nextStep.style.display = 'block';
 
@@ -741,19 +758,19 @@ def make_end_actions_html(next_cls_title: str | None,
         parts.append(
             f'<a class="btn-cta primary" href="{quiz_href}">'
             f'<span><span class="label">{t["cta_this_section"]}</span>'
-            f'<span class="title">📝 {t["cta_final_quiz"]}</span></span></a>'
+            f'<span class="title">{t["cta_final_quiz"]}</span></span></a>'
         )
         parts.append(
             f'<a class="btn-cta secondary" href="{back_href}">'
             f'<span><span class="label">{t["cta_done"]}</span>'
-            f'<span class="title">🎉 {t["cta_course_toc"]}</span></span></a>'
+            f'<span class="title">{t["cta_course_toc"]}</span></span></a>'
         )
     elif is_last_in_section:
         # End of section → quiz is primary, first class of next section is secondary
         parts.append(
             f'<a class="btn-cta primary" href="{quiz_href}">'
             f'<span><span class="label">{t["cta_check_section"]}</span>'
-            f'<span class="title">📝 {t["cta_section_quiz"]}</span></span></a>'
+            f'<span class="title">{t["cta_section_quiz"]}</span></span></a>'
         )
         if next_cls_href:
             parts.append(
@@ -772,7 +789,7 @@ def make_end_actions_html(next_cls_title: str | None,
         parts.append(
             f'<a class="btn-cta secondary" href="{quiz_href}">'
             f'<span><span class="label">{t["cta_check_first"]}</span>'
-            f'<span class="title">📝 {t["cta_section_quiz_short"]}</span></span></a>'
+            f'<span class="title">{t["cta_section_quiz_short"]}</span></span></a>'
         )
     return "\n    ".join(parts)
 
@@ -805,7 +822,7 @@ def make_toc_html(manifest: dict, current_cls_id: str, current_sec_slug: str,
             quiz_label = t["toc_quiz_tpl"].format(n=quiz_counts[sec["id"]])
             lines.append(
                 f'      <li class="quiz"><a href="{quiz_href(sec["slug"])}">'
-                f'📝 {quiz_label}</a></li>'
+                f'{quiz_label}</a></li>'
             )
         lines.append("    </ul>")
     return "\n".join(lines) + "\n"
@@ -848,7 +865,8 @@ def build_class_player(cls: dict, root: Path, back_href: str, quiz_href: str,
             "transcriptTimes": char_proportional_line_times(lines, slide_dur),
         })
 
-    duration_min = round(total_dur / 60.0, 1)
+    has_audio = any(slide["mp3"] for slide in slides)
+    duration_min = round(total_dur / 60.0, 1) if has_audio else (cls.get("duration_min") or 0)
     lo_ids = ", ".join(cls.get("lo_ids", []))
     end_actions_html = make_end_actions_html(
         next_cls_title, next_cls_href, is_last_in_section, is_last_in_course,
@@ -875,6 +893,7 @@ def build_class_player(cls: dict, root: Path, back_href: str, quiz_href: str,
         course_progress_pct=course_progress_pct,
         toc_html=toc_html,
         audio_notice_html=audio_notice_html,
+        body_class="has-audio" if has_audio else "no-audio",
         lang=lang,
         **tx_kwargs,
     )
@@ -922,15 +941,23 @@ def build_section_quiz(sec: dict, root: Path,
     return len(items)
 
 
-INDEX_STYLE = """body{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;
-max-width:760px;margin:0 auto;padding:24px 20px;background:#0f1115;color:#e8eaed;line-height:1.6}
-a{color:#7cb7ff;text-decoration:none}a:hover{text-decoration:underline}
-h1{font-size:28px;margin:0 0 8px 0}h2{font-size:18px;margin:32px 0 8px 0;
-padding-bottom:6px;border-bottom:1px solid #2a3345}
-ul{list-style:none;padding:0;margin:0}li{padding:10px 0;border-bottom:1px solid #1a1f29}
-.los{color:#8b95a7;font-size:13px;margin-left:8px}
-.quiz-link{color:#3a8a4f;font-weight:500}
-.meta{color:#8b95a7;margin-bottom:24px}"""
+INDEX_STYLE = """
+:root{--ink:#17232d;--paper:#f5f1e8;--surface:#fffdf8;--line:#d9d2c5;--muted:#6b746f;--signal:#ff5c35;--lime:#b9e34b}
+*{box-sizing:border-box}
+body{font-family:"Segoe UI Variable","Segoe UI",Arial,sans-serif;max-width:900px;margin:0 auto;padding:58px 24px 90px;background:var(--paper);color:var(--ink);line-height:1.6}
+body::before{content:"CHATGPT · ОТ А ДО Я";display:inline-block;background:var(--ink);color:#fff;padding:6px 10px;border-radius:999px;font-size:11px;font-weight:750;letter-spacing:.11em}
+a{color:var(--ink);text-decoration:none}a:hover{color:#d84524}
+a:focus-visible{outline:3px solid #376fba;outline-offset:3px}
+h1{font-size:clamp(38px,7vw,68px);line-height:.98;letter-spacing:-.05em;margin:24px 0 16px;max-width:760px}
+h2{font-size:21px;margin:42px 0 12px;padding:0 0 9px;border-bottom:4px solid var(--signal);letter-spacing:-.02em}
+ul{list-style:none;padding:0;margin:0;display:grid;gap:9px}
+li{padding:15px 16px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 20px rgba(23,35,45,.05)}
+li a{font-weight:700}
+.los{color:var(--muted);font-size:13px;margin-left:8px}
+.quiz-link{color:#58751c;font-weight:750}
+.meta{color:var(--muted);margin-bottom:30px;max-width:760px}
+@media(max-width:600px){body{padding:34px 14px 70px}.los{display:block;margin:5px 0 0}}
+"""
 
 
 def audience_to_str(aud) -> str:
@@ -975,14 +1002,14 @@ def build_index(manifest: dict, per_class_info: list, quiz_counts: dict, root: P
                 n_slides=info["slides"], dur=info["duration_min"], los=info["lo_ids"],
             )
             lines.append(
-                f'<li><a href="{info["rel"]}/player.html">🎬 {html.escape(cls["title"])}</a>'
+                f'<li><a href="{info["rel"]}/player.html">{html.escape(cls["title"])}</a>'
                 f'<span class="los">{html.escape(class_stats)}</span></li>'
             )
         if sec["id"] in quiz_counts:
             quiz_label = t["toc_quiz_tpl"].format(n=quiz_counts[sec["id"]])
             lines.append(
                 f'<li><a href="sections/{sec["slug"]}/quiz.html" class="quiz-link">'
-                f'📝 {html.escape(quiz_label)}</a></li>'
+                    f'{html.escape(quiz_label)}</a></li>'
             )
         lines.append('</ul>')
     lines.append('</body></html>')
@@ -1052,7 +1079,7 @@ def main():
         )
         info = build_class_player(
             entry["cls"], root,
-            back_href="../../../index.html",
+            back_href="../../../../index.html",
             quiz_href="../../quiz.html",
             next_cls_title=nxt_title,
             next_cls_href=nxt_href,
